@@ -9,6 +9,11 @@ TagManager:
   - goal
   - blanche
   - noire
+  - left
+  - right
+  - up
+  - down
+  - StartPoint
   layers:
   - Default
   - TransparentFX
