@@ -14,6 +14,7 @@ TagManager:
   - up
   - down
   - StartPoint
+  - check
   layers:
   - Default
   - TransparentFX
