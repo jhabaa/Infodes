@@ -15,6 +15,7 @@ public class grid : MonoBehaviour
     public GameObject startpoint;
     bool trouvé = false;
     int Vertical, Horizontal, Columns, Rows;
+    public Material mate;
     // Start is called before the first frame update
     void Start()
     {
@@ -25,8 +26,8 @@ public class grid : MonoBehaviour
 
         Vertical = (int)Camera.main.orthographicSize;
         Horizontal = Vertical * (Screen.width / Screen.height);
-        Columns = Horizontal * 2;
-        Rows = Vertical * 2;
+        Columns = Horizontal * 3;
+        Rows = Vertical * 3;
         Grid = new int[Columns, Rows];
         for (int i=0; i< Columns; i++)
         {
@@ -260,7 +261,7 @@ public class grid : MonoBehaviour
         g.transform.position = new Vector2(x - (Horizontal - 0.5f), y - (Vertical - 0.5f));
         g.tag = "blanche";
         var s = g.AddComponent<SpriteRenderer>();
-        s.color = new Color(value, value, value);
+        s.color = new Color(value, value, value,0);
         s.sprite = sprite;
         
         
