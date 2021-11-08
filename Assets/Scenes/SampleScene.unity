@@ -430,6 +430,7 @@ MonoBehaviour:
   startbutton: {fileID: 1773758489}
   cleanButton: {fileID: 1049732955}
   ndsButton: {fileID: 693046156}
+  beamButton: {fileID: 0}
   ufcButton: {fileID: 616529954}
   greddyButton: {fileID: 1977945888}
   sprite: {fileID: 21300000, guid: bde77aa76f5f946ba933e19be90a2fe2, type: 3}
