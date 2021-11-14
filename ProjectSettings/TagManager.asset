@@ -16,6 +16,7 @@ TagManager:
   - StartPoint
   - check
   - startpoint
+  - Rat
   layers:
   - Default
   - TransparentFX

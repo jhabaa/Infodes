@@ -7,22 +7,27 @@ using Resources = UnityEngine.Resources;
 
 public class ClickSelect : MonoBehaviour
 {
+    Material yellow;
     // Start is called before the first frame update
     void Start()
     {
-
-
+        
     }
 
     // Update is called once per frame
     void Update()
     {
+        Material yellow = Resources.Load("Yellow", typeof(Material)) as Material;
+        if (this.tag == "startpoint")
+        {
+           var mesh = this.GetComponent<MeshRenderer>();
+            mesh.material = yellow;
+        }
     }
 
     private void OnMouseDown()
     {
         var heuristicInstance = new grid();
-        Material yellow = Resources.Load("yellow", typeof(Material)) as Material;
         Debug.Log("Selection Depart");
         GameObject gameObject = this.GetComponent<GameObject>();
         var mesh = this.GetComponent<MeshRenderer>();
@@ -30,5 +35,21 @@ public class ClickSelect : MonoBehaviour
         mesh.tag = "startpoint";
         GameObject goal = GameObject.FindGameObjectWithTag("goal");
 
+    }
+    private void OnMouseOver()
+    {
+        Material green = Resources.Load("green", typeof(Material)) as Material;
+        var mesh = this.GetComponent<MeshRenderer>();
+        mesh.material = green;
+        if(Input.GetMouseButtonDown(0) == true)
+        {
+            Debug.Log("Clic droit");
+        }
+    }
+    private void OnMouseExit()
+    {
+        Material white = Resources.Load("white", typeof(Material)) as Material;
+        var mesh = this.GetComponent<MeshRenderer>();
+        mesh.material = white;
     }
 }
