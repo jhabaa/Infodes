@@ -93,7 +93,8 @@ public class grid : MonoBehaviour
          */
         do
         {
-            string[] split = piles[0].name.Split(',');
+            string[] part = piles[0].name.Split('#');
+            string[] split = part[0].Split(',');
             a = int.Parse(split[0]);
             b = int.Parse(split[1]);
             piles.RemoveAt(0);
@@ -101,8 +102,8 @@ public class grid : MonoBehaviour
             {
                 if (b == 0)
                 {
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, up);
                     piles.Insert(1, right);
 
@@ -110,17 +111,17 @@ public class grid : MonoBehaviour
                 else
                 if (b == 14)
                 {
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, right);
                     piles.Insert(1, down);
 
                 }
                 else if (b != 0 && b != 14)
                 {
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, up);
                     piles.Insert(1, right);
                     piles.Insert(2, down);
@@ -132,24 +133,24 @@ public class grid : MonoBehaviour
             {
                 if (b == 14)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, left);
                     piles.Insert(1, down);
                 }
                 else
                 if (b == 0)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, up);
                     piles.Insert(1, left);
                 }
                 else if (b != 0 && b != 14)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, up);
                     piles.Insert(1, left);
                     piles.Insert(2, down);
@@ -159,28 +160,28 @@ public class grid : MonoBehaviour
             {
                 if (b == 0)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, up);
                     piles.Insert(1, left);
                     piles.Insert(2, right);
                 }
                 else if (b == 14)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, left);
                     piles.Insert(1, right);
                     piles.Insert(2, down);
                 }
                 else if (b != 0 && b != 14)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
 
                     piles.Insert(0, up);
                     piles.Insert(1, left);
@@ -213,16 +214,14 @@ public class grid : MonoBehaviour
     {
         foreach(GameObject gameObject in gameObjects)
         {
-            string[] split = gameObject.name.Split(',');
+            string[] part = gameObject.name.Split('#');
+            string[] split = part[0].Split(',');
             if (split[2].Length > 0)
             {
                 print("Split est : " + gameObject.name);
-                gameObject.name = (split[0] + "," + split[1] + "," + split[2].Remove(0));
-                
-                split[2].Remove(0);
-                print("Split devient "+ gameObject.name);
+                gameObject.name = (split[0] + "," + split[1] + "," + split[2].Remove(0)+"#"+string.Empty);
             }
-            gameObject.name += HeuristicCost(gameObject,goalPoint);
+            gameObject.name = split[0] + "," + split[1] + "," + HeuristicCost(gameObject,goalPoint) + "#" + string.Empty;
         }
     }
 
@@ -247,10 +246,9 @@ public class grid : MonoBehaviour
                 piles.RemoveAt(0);
                 piles.RemoveAll(GameObject => GameObject == null);
             } while (piles[0].tag == "noire");
-
         }
-        Cost(piles);
-        InsertionSort(piles);
+        AddHeuristics(piles);
+        InsertionSortHeuristic(piles);
         piles.RemoveAll(GameObject => GameObject == null);
         if (piles[0].tag == "goal")
         {
@@ -264,7 +262,8 @@ public class grid : MonoBehaviour
             piles[0].tag = "check";
             piles[0].GetComponent<MeshRenderer>().material = yellow;
             paths.Add(piles[0]);
-            string[] split = piles[0].name.Split(',');
+            string[] part = piles[0].name.Split('#');
+            string[] split = part[0].Split(',');
             a = int.Parse(split[0]);
             b = int.Parse(split[1]);
         }
@@ -604,7 +603,8 @@ public class grid : MonoBehaviour
          */
         do
         {
-            string[] split = piles[0].name.Split(',');
+            string[] part = piles[0].name.Split('#');
+            string[] split = part[0].Split(',');
             a = int.Parse(split[0]);
             b = int.Parse(split[1]);
             piles.RemoveAt(0);
@@ -613,8 +613,8 @@ public class grid : MonoBehaviour
                 if (b == 0)
                 {
 
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
                     piles.Add(up);
                     piles.Add(right);
 
@@ -622,17 +622,17 @@ public class grid : MonoBehaviour
                 else
                 if (b == 14)
                 {
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
                     piles.Add(right);
                     piles.Add(down);
 
                 }
                 else if (b != 0 && b != 14)
                 {
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
                     piles.Add(up);
                     piles.Add(right);
                     piles.Add(down);
@@ -645,8 +645,8 @@ public class grid : MonoBehaviour
             {
                 if (b == 14)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
                     piles.Add(left);
                     piles.Add(down);
 
@@ -654,17 +654,17 @@ public class grid : MonoBehaviour
                 else
                 if (b == 0)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
                     piles.Add(up);
                     piles.Add(left);
 
                 }
                 else if (b != 0 && b != 14)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
                     piles.Add(up);
                     piles.Add(left);
                     piles.Add(down);
@@ -675,9 +675,9 @@ public class grid : MonoBehaviour
             {
                 if (b == 0)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
                     piles.Add(up);
                     piles.Add(left);
                     piles.Add(right);
@@ -685,9 +685,9 @@ public class grid : MonoBehaviour
                 }
                 else if (b == 14)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
                     piles.Add(left);
                     piles.Add(right);
                     piles.Add(down);
@@ -695,10 +695,10 @@ public class grid : MonoBehaviour
                 }
                 else if (b != 0 && b != 14)
                 {
-                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty);
-                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty);
-                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty);
-                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "#" + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "#" + string.Empty);
                     piles.Add(up);
                     piles.Add(left);
                     piles.Add(right);
@@ -749,7 +749,7 @@ public class grid : MonoBehaviour
             string[] split = piles[0].name.Split(',');
             a = int.Parse(split[0]);
             b = int.Parse(split[1]);
-            piles[0].name = split[0] + "," + split[1] + "," + string.Empty;
+            piles[0].name = split[0] + "," + split[1] + "," + string.Empty + "#" + string.Empty;
         }
     }
     /*
@@ -1062,6 +1062,32 @@ public class grid : MonoBehaviour
             {
                 string[] split1 = input[j].name.Split('#');
                 if (uint.Parse(split[1]) > uint.Parse(split1[1]))
+                {
+                    min = j;
+                }
+            }
+
+            if (min != i)
+            {
+                var lowerValue = input[min];
+                input[min] = input[i];
+                input[i] = lowerValue;
+            }
+        }
+    }
+    public static void InsertionSortHeuristic(List<GameObject> input)
+    {
+        for (var i = 0; i < input.Count; i++)
+        {
+
+            var min = i;
+            string[] part = input[min].name.Split('#');
+            string[] split = part[0].Split(',');
+            for (var j = i + 1; j < input.Count; j++)
+            {
+                string[] part1 = input[j].name.Split('#');
+                string[] split1 = part1[0].Split(',');
+                if (uint.Parse(split[2]) > uint.Parse(split1[2]))
                 {
                     min = j;
                 }
