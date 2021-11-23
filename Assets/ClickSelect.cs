@@ -8,6 +8,7 @@ using Resources = UnityEngine.Resources;
 public class ClickSelect : MonoBehaviour
 {
     Material yellow;
+    Material tempMaterial;
     // Start is called before the first frame update
     void Start()
     {
@@ -38,9 +39,10 @@ public class ClickSelect : MonoBehaviour
     }
     private void OnMouseOver()
     {
-        Material green = Resources.Load("green", typeof(Material)) as Material;
+        tempMaterial = this.GetComponent<MeshRenderer>().material;
+        Material white = Resources.Load("white", typeof(Material)) as Material;
         var mesh = this.GetComponent<MeshRenderer>();
-        mesh.material = green;
+        mesh.material = white;
         if(Input.GetMouseButtonDown(0) == true)
         {
             Debug.Log("Clic droit");
@@ -48,8 +50,8 @@ public class ClickSelect : MonoBehaviour
     }
     private void OnMouseExit()
     {
-        Material white = Resources.Load("white", typeof(Material)) as Material;
+        Material green = Resources.Load("green", typeof(Material)) as Material;
         var mesh = this.GetComponent<MeshRenderer>();
-        mesh.material = white;
+        mesh.material = green;
     }
 }
