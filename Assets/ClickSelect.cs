@@ -35,7 +35,8 @@ public class ClickSelect : MonoBehaviour
         mesh.material = yellow;
         mesh.tag = "startpoint";
         GameObject goal = GameObject.FindGameObjectWithTag("goal");
-
+        disableCode();
+        
     }
     private void OnMouseOver()
     {
@@ -53,5 +54,14 @@ public class ClickSelect : MonoBehaviour
         Material green = Resources.Load("green", typeof(Material)) as Material;
         var mesh = this.GetComponent<MeshRenderer>();
         mesh.material = green;
+    }
+
+    //Once a case is selected. We can't select more.
+    private void disableCode()
+    {
+        foreach(GameObject game in GameObject.FindGameObjectsWithTag("blanche"))
+        {
+            game.GetComponent<ClickSelect>().enabled = false;
+        }
     }
 }

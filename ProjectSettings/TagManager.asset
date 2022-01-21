@@ -17,6 +17,8 @@ TagManager:
   - check
   - startpoint
   - Rat
+  - water
+  - pave
   layers:
   - Default
   - TransparentFX

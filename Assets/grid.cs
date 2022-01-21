@@ -4,42 +4,46 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Linq;
+using UnityEngine.SceneManagement;
+using System.Diagnostics;
+using UnityEngine.Profiling;
 
 public class grid : MonoBehaviour
-{   public Button button;
-    public Button startbutton;
-    public Button cleanButton;
-    public Button ndsButton, beamButton;
-    public Button ufcButton, greddyButton;
-    public Sprite sprite;
+{
+    public Button button, startbutton, cleanButton, ndsButton, beamButton, ufcButton, greddyButton;
+    public Sprite sprite, circle;
     public int[,] Grid;
-    private float speed = 2.0f;
+    public float speed = 200.0f;
     public GameObject[] sequence;
     public List<int[,]> NameTab;
     public List<GameObject> piles,paths;
     private List<string> tags, liste;
     private int a , b, goalPointX, goalPointY, finalCost=200;
     private int costAtCursor = 0;
-    public int AccCost1 = 0;
+    private int AccCost1 = 0;
     public GameObject startpoint, goalPoint, rat, grass, cheese, cailloux;
     bool trouvé = false;
-    public int Vertical, Horizontal, Columns, Rows;
-    public Material mate;
-    public Sprite circle;
-    Material yellow;
-    Material red;
-    Material green;
-    Material white ;
-    Material plateforme;
+    private int Vertical, Horizontal, Columns, Rows, algorithmSize;
+    public Material mate, water, pave;
+    private Text starText;
+    Material yellow, setColor, red, blue, violet, pink, green, white, plateforme;
    
-    // Start is called before the first frame update
+    // Start is called before the first frame update. We called here materials, and set target 
     void Start()
     {
-
+        /*
+         * Loading Ressources to use during the code
+         */
         yellow = Resources.Load("yellow", typeof(Material)) as Material;
         red = Resources.Load("red", typeof(Material)) as Material;
         green = Resources.Load("green", typeof(Material)) as Material;
         white = Resources.Load("white", typeof(Material)) as Material;
+        blue = Resources.Load("Blue", typeof(Material)) as Material;
+        violet = Resources.Load("Violet", typeof(Material)) as Material;
+        pink = Resources.Load("Pink", typeof(Material)) as Material;
+        water = Resources.Load("Water", typeof(Material)) as Material;
+        pave = Resources.Load("pave", typeof(Material)) as Material;
+
         plateforme = Resources.Load("plateforme", typeof(Material)) as Material;
         rat = Resources.Load("Rat", typeof(GameObject)) as GameObject;
         grass = Resources.Load("Grass", typeof (GameObject)) as GameObject;
@@ -60,7 +64,11 @@ public class grid : MonoBehaviour
         greedyBtn.onClick.AddListener(greedySearch);
         Button ufcBtn = ufcButton.GetComponent<Button>();
         ufcBtn.onClick.AddListener(UpgradedUniformCost);
+        starText = ufcButton.GetComponentInChildren<Text>();
 
+        /*
+         * Draw our game depending of camera size
+         */
         Vertical = (int)Camera.main.orthographicSize;
         Horizontal = Vertical * (Screen.width / Screen.height);
         Grid = new int[15, 15];
@@ -71,7 +79,9 @@ public class grid : MonoBehaviour
                 SpawnTile(i, j);
             }
         }
-        // Selectionnons un objet qui marquera l'objectif. Il sera rouge et deviendra vert une fois atteint
+        /*
+         * Set a cheese cake as objective target in the first two lines upside
+         */
         a = Random.Range(0,15);
         b = Random.Range(13, 15);
         GameObject goal = GameObject.Find(a.ToString() + "," + b.ToString() + "," + string.Empty+ "," + string.Empty + "#" +string.Empty);
@@ -84,15 +94,43 @@ public class grid : MonoBehaviour
         goalPointX = a;
         goalPointY = b;
     }
+
     /*
-     * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  GREEDY SEARCH $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-     * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-     * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+     * Here we just move the rat step by step to show the full path throught the target
+     */
+    private IEnumerator moveRat(List<GameObject> list)
+    {
+        MeshRendererCheck(list);
+        list.Reverse();
+        GameObject animal = GameObject.FindGameObjectWithTag("Rat");
+        WaitForSeconds wait = new WaitForSeconds(0.2f);
+        float step = speed * Time.deltaTime;
+        foreach (GameObject gameObject in list.ToList())
+        {
+            animal.transform.position = new Vector3(gameObject.transform.position.x, gameObject.transform.position.y - 1.3f,
+            gameObject.transform.position.z - 6.55f);
+            gameObject.GetComponent<MeshRenderer>().material = setColor;
+            yield return new WaitForSeconds(0.1f);
+            animal.transform.position = Vector3.MoveTowards(animal.transform.position, gameObject.transform.position, step);
+        }
+        yield return null;
+        animal.transform.position = new Vector3(goalPoint.transform.position.x, goalPoint.transform.position.y - 1.3f,
+            goalPoint.transform.position.z - 6.55f);
+    }
+
+    /*
+     ***** $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  ALGORITHMS $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+     ***** $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+     ***** $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      */
 
+    //============================================ GREEDY SEARCH ======================================================
     private void greedySearch()
     {
+        setColor = blue;
         GameObject up, left, right, down;
+        var stopWatchGreedy = new Stopwatch();
+        stopWatchGreedy.Start();
         /*
          * remove the first path from the QUEUE (FILE); create new paths (to all children);
          * add the new paths to front of QUEUE (FILE);
@@ -197,43 +235,10 @@ public class grid : MonoBehaviour
             }
             greedyCursor();
         } while (piles.Count != 0 && trouvé == false);
+        stopWatchGreedy.Stop();
+        GameObject.Find("ResultGreedy").GetComponent<Text>().text = GameObject.Find("ResultGreedy").GetComponent<Text>().text + "(" + stopWatchGreedy.ElapsedMilliseconds + "ms)" + SizeCalculator(piles).ToString() + "bytes";
+
     }
-
-    private IEnumerator moveRat(List<GameObject> list)
-    {
-        list.Reverse();
-        GameObject animal = GameObject.FindGameObjectWithTag("Rat");
-        WaitForSeconds wait = new WaitForSeconds(2f);
-        float step = speed * Time.deltaTime;
-        foreach (GameObject gameObject in list.ToList())
-        {
-            animal.transform.position = new Vector3( gameObject.transform.position.x, gameObject.transform.position.y -1.3f,
-            gameObject.transform.position.z-6.55f);
-            gameObject.GetComponent<MeshRenderer>().material = yellow;
-            yield return new WaitForSeconds(1f);
-           // animal.transform.position = Vector3.MoveTowards(animal.transform.position, gameObject.transform.position, step);
-        }
-        animal.transform.position = new Vector3(goalPoint.transform.position.x, goalPoint.transform.position.y - 1.3f,
-            goalPoint.transform.position.z - 6.55f);
-    }
-
-    private void AddHeuristics(List<GameObject> gameObjects)
-    {
-        foreach(GameObject gameObject in gameObjects)
-        {
-            string[] part = gameObject.name.Split('#');
-            string[] split = part[0].Split(',');
-            if (split[2].Length > 0)
-            {
-                print("Split est : " + gameObject.name);
-                gameObject.name = (split[0] + "," + split[1] + "," + split[2].Remove(0)+ "," + string.Empty + "#" +string.Empty);
-            }
-            gameObject.name = split[0] + "," + split[1] + "," + HeuristicCost(gameObject,goalPoint) + "," + string.Empty + "#" + string.Empty;
-        }
-    }
-
-
-    /*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  GREEDY CURSOR  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
     private void greedyCursor()
     {
         piles.RemoveAll(GameObject => GameObject == null);
@@ -266,100 +271,21 @@ public class grid : MonoBehaviour
         if (piles[0].tag == "blanche")
         {
             piles[0].tag = "check";
-           // piles[0].GetComponent<MeshRenderer>().material = yellow;
-            paths.Insert(0,piles[0]);
+            paths.Insert(0, piles[0]);
             string[] part = piles[0].name.Split('#');
             string[] split = part[0].Split(',');
             a = int.Parse(split[0]);
             b = int.Parse(split[1]);
-        }  
+        }
     }
 
-    private void startPoint()
-    {
-        startpoint = GameObject.FindGameObjectWithTag("startpoint");
-        piles.Add(startpoint);
-        string[] split = startpoint.name.Split(',');
-        a = int.Parse(split[0]);
-        b = int.Parse(split[1]);
-        startpoint.name = split[0] + "," + split[1] + "," + HeuristicCost(startpoint, goalPoint) + "," + 0.ToString()+ "#" + string.Empty;
-        GameObject newrat = GameObject.Instantiate(rat);
-        newrat.tag = "Rat";
-        newrat.transform.localScale = new Vector3(0.1589f,1f,0.10100f);
-        newrat.transform.Rotate(new Vector3(-90f,0f,0f));
-        newrat.transform.position = new Vector3(
-            startpoint.transform.position.x, startpoint.transform.position.y-1.3f,-6.55f);
-        Maze();
-    }
-
-    private void Clean()
-    {
-        
-        
-    }
-
-
-    /*
-************************************************** DFS algorithm part ***************************************************
-*************************************************************************************************************************
-*************************************************************************************************************************
-*************************************************************************************************************************
-*/
-    /*
-* $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Cursor for DFS and NDS algorithms. $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 
-*/
-    public void dfsAndNdsCursor()
-    {
-        /*
-         * reject the new paths with loops;
-         */
-        piles.RemoveAll(GameObject => GameObject == null);
-        // La suppression provoque le non retour. à régler.
-        // La zone arrière n'est pas définie. On doit faire marche arrière si on ne peut plus bouger. 
-        // suppression des boucles
-        if (piles[0].tag == "check")
-        {
-            do
-            {
-                piles.RemoveAt(0);
-                piles.RemoveAll(GameObject => GameObject == null);
-            } while (piles[0].tag == "check");
-        }
-        //Lets delete the first GameObject of the file if tag is black
-        if (piles[0].tag == "noire")
-        {
-            do
-            {
-                piles.RemoveAt(0);
-                piles.RemoveAll(GameObject => GameObject == null);
-            } while (piles[0].tag == "noire");
-
-        }
-        if (piles[0].tag == "goal")
-        {
-            print("Fin de Partie : ");
-            trouvé = true;
-            StartCoroutine(moveRat(paths));
-        }
-        if (piles[0].tag == "blanche")
-        {
-            piles[0].tag = "check";
-            piles[0].GetComponent<MeshRenderer>().material = yellow;
-            paths.Insert(0,piles[0]);
-            string[] part = piles[0].name.Split('#');
-            string[] split = part[0].Split(',');
-            a = int.Parse(split[0]);
-            b = int.Parse(split[1]);
-            piles[0].name = split[0] + "," + split[1] + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
-        }
-
-    }
-    /*
-     * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ DFS $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-     */
+    //================================================= DFS ================================================================
     public void newDFS()
     {
         GameObject up, left, right, down;
+        setColor = yellow;
+        var stopWatchDFS = new Stopwatch();
+        stopWatchDFS.Start();
 
         /*
          * remove the first path from the QUEUE (FILE); create new paths (to all children);
@@ -376,9 +302,9 @@ public class grid : MonoBehaviour
             {
                 if (b == 0)
                 {
-                    
-                    up = GameObject.Find(Sum(a,b,0) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
-                    right = GameObject.Find(Sum(a,b,2)+","+ string.Empty + "," + string.Empty + "#" + string.Empty);
+
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, up);
                     piles.Insert(1, right);
 
@@ -386,8 +312,8 @@ public class grid : MonoBehaviour
                 else
                 if (b == 14)
                 {
-                    right = GameObject.Find(Sum(a,b,2) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
-                    down = GameObject.Find(Sum(a,b,3) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, right);
                     piles.Insert(1, down);
 
@@ -396,7 +322,7 @@ public class grid : MonoBehaviour
                 {
                     up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
                     right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
-                    down = GameObject.Find(Sum(a,b,3) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
+                    down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, up);
                     piles.Insert(1, right);
                     piles.Insert(2, down);
@@ -459,9 +385,9 @@ public class grid : MonoBehaviour
                 }
                 else if (b != 0 && b != 14)
                 {
-                    left = GameObject.Find(Sum(a,b,1) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
-                    up = GameObject.Find(Sum(a,b,0) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
-                    right = GameObject.Find(Sum(a,b,2) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
+                    left = GameObject.Find(Sum(a, b, 1) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
+                    up = GameObject.Find(Sum(a, b, 0) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
+                    right = GameObject.Find(Sum(a, b, 2) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
                     down = GameObject.Find(Sum(a, b, 3) + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
                     piles.Insert(0, up);
                     piles.Insert(1, left);
@@ -473,37 +399,19 @@ public class grid : MonoBehaviour
             }
             dfsAndNdsCursor();
         } while (piles.Count != 0 && trouvé == false);
- 
-    }
-    //Fonctions linked to NDS to place objects at random place (surcharged)
-/*
- * NDS Algorithm Part, with a surcharged function to place objects in file and algorithm itself
- */
-    public void NdsPlacement(GameObject x, GameObject y)
-    {
-        int place = Random.Range(0, piles.Count);
-        piles.Insert(place, x);
-        piles.Insert(place + 1, y);
-    }
-    public void NdsPlacement(GameObject x, GameObject y,GameObject w)
-    {
-        int place = Random.Range(0, piles.Count);
-        piles.Insert(place, x);
-        piles.Insert(place + 1, y);
-        piles.Insert(place + 2, w);
-    }
-    public void NdsPlacement(GameObject x, GameObject y,GameObject w, GameObject z)
-    {
-        int place = Random.Range(0, piles.Count);
-        piles.Insert(place, x);
-        piles.Insert(place + 1, y);
-        piles.Insert(place + 2, w);
-        piles.Insert(place + 3, z);
+        stopWatchDFS.Stop();
+        GameObject.Find("ResultDFS").GetComponent<Text>().text = GameObject.Find("ResultDFS").GetComponent<Text>().text + "(" + stopWatchDFS.ElapsedMilliseconds + "ms)" + SizeCalculator(piles).ToString() + "bytes";
+
     }
 
+    //================================================= NDS ================================================================
     public void NonDeterministicSearch()
     {
+        setColor = pink;
         GameObject up, left, right, down;
+        var stopWatchNDS = new Stopwatch();
+        stopWatchNDS.Start();
+
         /*
          * remove the first path from the QUEUE (FILE); create new paths (to all children);
          * add the new paths to a random place in QUEUE(FILE);
@@ -591,18 +499,89 @@ public class grid : MonoBehaviour
             }
             dfsAndNdsCursor();
         } while (piles.Count != 0 && trouvé == false);
+
+        stopWatchNDS.Stop();
+        GameObject.Find("ResultNDS").GetComponent<Text>().text = GameObject.Find("ResultNDS").GetComponent<Text>().text + "(" + stopWatchNDS.ElapsedMilliseconds + "ms)" + SizeCalculator(piles).ToString() + "bytes";
+
+    }
+    public void dfsAndNdsCursor()
+    {
+
+        /*
+         * reject the new paths with loops;
+         */
+        piles.RemoveAll(GameObject => GameObject == null);
+        // La suppression provoque le non retour. à régler.
+        // La zone arrière n'est pas définie. On doit faire marche arrière si on ne peut plus bouger. 
+        // suppression des boucles
+        if (piles[0].tag == "check")
+        {
+            do
+            {
+                piles.RemoveAt(0);
+                piles.RemoveAll(GameObject => GameObject == null);
+            } while (piles[0].tag == "check");
+        }
+        //Lets delete the first GameObject of the file if tag is black
+        if (piles[0].tag == "noire")
+        {
+            do
+            {
+                piles.RemoveAt(0);
+                piles.RemoveAll(GameObject => GameObject == null);
+            } while (piles[0].tag == "noire");
+
+        }
+        if (piles[0].tag == "goal")
+        {
+            print("Fin de Partie : ");
+            trouvé = true;
+            StartCoroutine(moveRat(paths));
+        }
+        if (piles[0].tag == "blanche")
+        {
+            piles[0].tag = "check";
+            paths.Insert(0, piles[0]);
+            string[] part = piles[0].name.Split('#');
+            string[] split = part[0].Split(',');
+            a = int.Parse(split[0]);
+            b = int.Parse(split[1]);
+            piles[0].name = split[0] + "," + split[1] + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
+        }
+
+    }
+    /*
+     * NDS Algorithm Part, with a surcharged function to place objects in file and algorithm itself at a random position
+     */
+    public void NdsPlacement(GameObject x, GameObject y)
+    {
+        int place = Random.Range(0, piles.Count);
+        piles.Insert(place, x);
+        piles.Insert(place + 1, y);
+    }
+    public void NdsPlacement(GameObject x, GameObject y, GameObject w)
+    {
+        int place = Random.Range(0, piles.Count);
+        piles.Insert(place, x);
+        piles.Insert(place + 1, y);
+        piles.Insert(place + 2, w);
+    }
+    public void NdsPlacement(GameObject x, GameObject y, GameObject w, GameObject z)
+    {
+        int place = Random.Range(0, piles.Count);
+        piles.Insert(place, x);
+        piles.Insert(place + 1, y);
+        piles.Insert(place + 2, w);
+        piles.Insert(place + 3, z);
     }
 
-    /*
-     * ******************************************** BEAM SEARCH PART ******************************************************
-     * *******************************************************************************************************************
-     * *******************************************************************************************************************
-     * *******************************************************************************************************************
-     */
+    //============================================== Beam Search ==========================================================
     public void BeamSearch()
     {
         GameObject up, left, right, down;
-
+        setColor = violet;
+        var stopWatchBeam = new Stopwatch();
+        stopWatchBeam.Start();
         /*
          * remove the first path from the QUEUE (FILE); create new paths (to all children);
          * add the new paths to front of QUEUE (FILE);
@@ -715,6 +694,8 @@ public class grid : MonoBehaviour
             }
             BeamCursor();
         } while (piles.Count != 0 && trouvé == false);
+        stopWatchBeam.Stop();
+        GameObject.Find("ResultBeam").GetComponent<Text>().text = GameObject.Find("ResultBeam").GetComponent<Text>().text + "(" + stopWatchBeam.ElapsedMilliseconds + "ms)" + SizeCalculator(piles).ToString() + "bytes";
     }
     public void BeamCursor()
     {
@@ -745,26 +726,99 @@ public class grid : MonoBehaviour
         if (piles[0].tag == "blanche")
         {
             piles[0].tag = "check";
-           // piles[0].GetComponent<MeshRenderer>().material = yellow;
-            paths.Insert(0,piles[0]);
+            paths.Insert(0, piles[0]);
             string[] split = piles[0].name.Split(',');
             a = int.Parse(split[0]);
             b = int.Parse(split[1]);
             piles[0].name = split[0] + "," + split[1] + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
         }
     }
-    /*
-     * ****************************************** Heuristic Part ********************************************************
-     */
-    /*
-     * ****************************************** Optimal Part ********************************************************
-     *************************  EstimatedExtendedUniformCost+Branch&Bound+Suppression=A*  *******************
-     */
-    // Continue UniformCost until the minimun node cost is greater than accumulate goal Cost
 
+    //================================================== A* ===============================================================
+
+    /*
+     * Here we can sort our UniformCost and set cursor
+     */
+    private void UniformSort(List<GameObject> piles)
+    {
+        print(piles.Count);
+        piles.RemoveAll(GameObject => GameObject == null);
+        //Reject new paths with loops 
+        if (piles[0].tag == "check")
+        {
+            print(piles[0].name + " = check");
+            do
+            {
+                piles.RemoveAt(0);
+                piles.RemoveAll(GameObject => GameObject == null);
+            } while (piles[0].tag == "check");
+        }
+        //Lets delete the first GameObject of the file if tag is black
+        if (piles[0].tag == "noire")
+        {
+            do
+            {
+                piles.RemoveAt(0);
+                piles.RemoveAll(GameObject => GameObject == null);
+            } while (piles[0].tag == "noire");
+
+        }
+        //Add new paths and sort the entire Queue by f = cost+h
+        AddHSeparately(piles);
+        AddCost(piles);
+        string[] cursorPart = piles[0].name.Split('#');
+        string[] cursorCost = cursorPart[0].Split(',');
+        costAtCursor = int.Parse(cursorCost[3]);
+        AddF(piles);
+        InsertionSort(piles);
+        if (piles[0].tag == "noire")
+        {
+            do
+            {
+                piles.RemoveAt(0);
+                piles.RemoveAll(GameObject => GameObject == null);
+            } while (piles[0].tag == "noire");
+
+        }
+        if (piles[0].tag == "goal")
+        {
+            print("Fin de Partie : ");
+            trouvé = true;
+            StartCoroutine(moveRat(paths));
+        }
+        if (piles[0].tag != "check" && piles[0].tag != "goal")
+        {
+            paths.Insert(0, piles[0]);
+            piles[0].tag = "check";
+            string[] part = piles[0].name.Split('#');
+            string[] split = part[0].Split(',');
+            a = int.Parse(split[0]);
+            b = int.Parse(split[1]);
+        }
+    }
+    /*private void AddHeuristics(List<GameObject> gameObjects)
+    {
+        foreach(GameObject gameObject in gameObjects)
+        {
+            string[] part = gameObject.name.Split('#');
+            string[] split = part[0].Split(',');
+            if (split[2].Length > 0)
+            {
+                print("Split est : " + gameObject.name);
+                gameObject.name = (split[0] + "," + split[1] + "," + split[2].Remove(0)+ "," + string.Empty + "#" +string.Empty);
+            }
+            gameObject.name = split[0] + "," + split[1] + "," + HeuristicCost(gameObject,goalPoint) + "," + string.Empty + "#" + string.Empty;
+        }
+    }*/
+
+    /*
+     * Continue UniformCost until the minimun node cost is greater than accumulate goal Cost
+     */
     public void UpgradedUniformCost()
     {
-      
+        setColor = red;
+        var stopWatch = new Stopwatch();
+        stopWatch.Start();
         do
         {
             int finalCostInt = Cost(piles);
@@ -873,27 +927,44 @@ public class grid : MonoBehaviour
             }
             UniformSort(piles);
         } while (piles.Count != 0 && trouvé == false);
-        
+        stopWatch.Stop();
+        GameObject.Find("ResultA").GetComponent<Text>().text = GameObject.Find("ResultA").GetComponent<Text>().text + "(" + stopWatch.ElapsedMilliseconds + "ms) " + SizeCalculator(piles).ToString() + "bytes";
     }
 
-    //Function F(path) where f(path) = cost(path) + h(endpoint)
+    /*
+************************************************** OTHER ALGORITHMS *****************************************************
+*************************************************************************************************************************
+*************************************************************************************************************************
+*************************************************************************************************************************
+*/
+    //=============================================== COST & HEURISTIC ==================================================
+
+    /*
+     * Function F(path) where f(path) = cost(path) + h(endpoint)
+     */
     private int Cost(List<GameObject> path)
     {
         int cost = 0;
         foreach (GameObject gameObject in path)
         {
             cost += CostByTag(gameObject);
-
         }
         return cost;
     }
-
     private int CostByTag(GameObject gameObject)
     {
         int costBytag = 0;
         if (gameObject.tag == "blanche")
         {
             costBytag = 4;
+        }
+        if (gameObject.tag == "water")
+        {
+            costBytag = 10;
+        }
+        if (gameObject.tag == "pave")
+        {
+            costBytag = 2;
         }
         return costBytag;
     }
@@ -934,65 +1005,11 @@ public class grid : MonoBehaviour
             gameObject.name = (split[0] + "," + split[1] + "," + split[2] + "," + c.ToString() + "#" + string.Empty);
         }
     }
-    //Here we can sort our UniformCost and set cursor
-    private void UniformSort(List<GameObject> piles)
-    {
-        piles.RemoveAll(GameObject => GameObject == null);
-        //Reject new paths with loops 
-        if (piles[0].tag == "check")
-        {
-            do
-            {
-                piles.RemoveAt(0);
-                piles.RemoveAll(GameObject => GameObject == null);
-            } while (piles[0].tag == "check");
-        }
-        //Lets delete the first GameObject of the file if tag is black
-        if (piles[0].tag == "noire")
-        {
-            do
-            {
-                piles.RemoveAt(0);
-                piles.RemoveAll(GameObject => GameObject == null);
-            } while (piles[0].tag == "noire");
-
-        }
-        //Add new paths and sort the entire Queue by f = cost+h
-        
-
-        AddHSeparately(piles);
-        AddCost(piles);
-        string[] cursorPart = piles[0].name.Split('#');
-        string[] cursorCost = cursorPart[0].Split(',');
-        costAtCursor = int.Parse(cursorCost[3]);
-        AddF(piles);
-        InsertionSort(piles);
-        if (piles[0].tag == "noire")
-        {
-            do
-            {
-                piles.RemoveAt(0);
-                piles.RemoveAll(GameObject => GameObject == null);
-            } while (piles[0].tag == "noire");
-
-        }
-        if (piles[0].tag == "goal")
-        {
-            print("Fin de Partie : ");
-            trouvé = true;
-            StartCoroutine(moveRat(paths));
-        }
-        if (piles[0].tag != "check" && piles[0].tag != "goal")
-        {
-            paths.Insert(0,piles[0]);
-            piles[0].tag = "check";
-            string[] part = piles[0].name.Split('#');
-            string[] split = part[0].Split(',');
-            a = int.Parse(split[0]);
-            b = int.Parse(split[1]);
-        }
-    }
-    //Cost Estimation by bird fly
+ 
+                                                 
+    /*
+     * Fly Bird Cost Estimation
+     */
     internal int HeuristicCost(GameObject gameObject, GameObject goal)
     {
         int heuristic;
@@ -1002,7 +1019,7 @@ public class grid : MonoBehaviour
         b = int.Parse(split[1]);
         int x = int.Parse(splitGoal[0]);
         int y = int.Parse(splitGoal[1]);
-        //in the case where Goal is always up. 
+        //in the case where Goal is always up. The other way isn't usefull yet 
         if (x > a)
         {
             heuristic = (x - a) + (y - b);
@@ -1014,8 +1031,9 @@ public class grid : MonoBehaviour
         return heuristic;
     }
 
+                                               
     /*
-     * SUM algorithm for all others
+     * Sum algorithm for all others & swap positions
      */
     private string Sum(int a, int b, int r)
     {
@@ -1059,6 +1077,10 @@ public class grid : MonoBehaviour
         x = y;
         y = temp;
     }
+                                            
+    /*
+     * To Sort by Cost
+     */
     public static void InsertionSort(List<GameObject> input)
     {
 
@@ -1084,6 +1106,10 @@ public class grid : MonoBehaviour
             }
         }
     }
+
+    /*
+     * To Sort by Heuristic
+     */
     public static void InsertionSortHeuristic(List<GameObject> input)
     {
         for (var i = 0; i < input.Count-1; i++)
@@ -1111,32 +1137,93 @@ public class grid : MonoBehaviour
         }
     }
 
+    /*
+     * Start game by adding the rat at start position.
+     */
+    private void startPoint()
+    {
+        startpoint = GameObject.FindGameObjectWithTag("startpoint");
+        piles.Add(startpoint);
+        string[] split = startpoint.name.Split(',');
+        a = int.Parse(split[0]);
+        b = int.Parse(split[1]);
+        startpoint.name = split[0] + "," + split[1] + "," + HeuristicCost(startpoint, goalPoint) + "," + 0.ToString() + "#" + string.Empty;
+        GameObject newrat = GameObject.Instantiate(rat);
+        newrat.tag = "Rat";
+        newrat.transform.localScale = new Vector3(0.1589f, 1f, 0.10100f);
+        newrat.transform.Rotate(new Vector3(-90f, 0f, 0f));
+        newrat.transform.position = new Vector3(
+            startpoint.transform.position.x, startpoint.transform.position.y - 1.3f, -6.55f);
+        Maze();
+    }
+
+    /*
+     * Clean the game to launch another algorithm 
+     */
+    private void Clean()
+    {
+        foreach (GameObject gameObject in GameObject.FindGameObjectsWithTag("check"))
+        {
+            gameObject.tag = "blanche";
+            string[] part = gameObject.name.Split('#');
+            string[] split = part[0].Split(',');
+            gameObject.name = split[0] + "," + split[1] + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
+        }
+        paths.Clear();
+        //Rename and Delete Objects in Piles
+        foreach (GameObject gameObject1 in piles)
+        {
+            if (gameObject1.tag == "startpoint")
+            {
+                string[] part1 = gameObject1.name.Split('#');
+                string[] split1 = part1[0].Split(',');
+                gameObject1.name = split1[0] + "," + split1[1] + "," + HeuristicCost(startpoint, goalPoint) + "," + 0.ToString() + "#" + string.Empty;
+            }
+            else
+            if (gameObject1.tag == "goal")
+            {
+                string[] part4 = gameObject1.name.Split('#');
+                string[] split4 = part4[0].Split(',');
+                gameObject1.name = split4[0] + "," + split4[1] + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
+            }
+            else
+                gameObject1.tag = "blanche";
+            string[] part3 = gameObject1.name.Split('#');
+            string[] split3 = part3[0].Split(',');
+            gameObject1.name = split3[0] + "," + split3[1] + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
+        }
+        piles.Clear();
+        //Move Rat to the start position
+        GameObject ratNewPosition = GameObject.FindGameObjectWithTag("Rat");
+        ratNewPosition.transform.localPosition = new Vector3(startpoint.transform.position.x, startpoint.transform.position.y - 1.3f,
+            startpoint.transform.position.z - 6.55f);
+        piles.Add(startpoint);
+        trouvé = false;
+        string[] part2 = goalPoint.name.Split('#');
+        string[] split2 = part2[0].Split(',');
+        goalPoint.name = split2[0] + "," + split2[1] + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
+        goalPoint.tag = "goal";
+    }
+
+
     // Update is called once per frame
     void Update()
-    {
-        /* if(Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
-         {
-             GameObject s = FindObjectOfType<GameObject>();
-             Debug.Log("Click" + s.name);
-
-         }*/
+    {   
        if(button.enabled == false)
         {
             StartCoroutine("newDFS");
         }
-      /* if (trouvé == true)
-        {
-            StartCoroutine(moveRat(paths));
-        }*/
-      
     }
+
+
 /*
- * Here we populate our "Grid" with gameobjects and Sprites in our GameObjects.
- * One day we'll be back to make 3D spheres instead
+ * Here we populate our "Grid" with gameobjects.
+ * One day we'll be back to make 3D elements instead (😊 Done)
  */
     private void SpawnTile(int x, int y)
     {
-        // le formet du nom est : (posX, posY, heuristic,AccCost # f= AccCost+h )
+        // le format du nom est : (posX, posY, heuristic, AccCost # AccCost+h )
+
         GameObject g = GameObject.Instantiate(grass);
         g.name = x.ToString() + "," + y.ToString()+","+ string.Empty +","+string.Empty+ "#"+string.Empty;
         g.transform.localScale = new Vector3(0.019f, 1f, 0.020f);
@@ -1153,17 +1240,72 @@ public class grid : MonoBehaviour
  */
     public void Maze()
     {
-        for (int i = 0; i<35; i++)
+        for (int i = 0; i<25; i++)
         {
             a = Random.Range(0, 15);
-            b = Random.Range(3, 13);
+            b = Random.Range(2, 6);
             GameObject block = GameObject.Find(a.ToString() + "," + b.ToString() + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
             GameObject block3D = Instantiate<GameObject>(cailloux);
-            block3D.transform.position = new Vector2(block.transform.position.x, block.transform.position.y-1f);
-            block.SetActive(false);
-            block3D.tag = "noire";
+            block3D.transform.position = new Vector3(block.transform.position.x, block.transform.position.y - 1,block.transform.position.z);
             block3D.name = a.ToString() + "," + b.ToString() + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
+            block3D.tag = "noire";
+            Destroy(block);   
+        }
+        for (int i = 0; i < 25; i++)
+        {
+                a = Random.Range(0, 15);
+                b = Random.Range(6, 8);
+                GameObject block1 = GameObject.Find(a.ToString() + "," + b.ToString() + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
+           
+                GameObject block12 = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                block12.transform.position = new Vector3(block1.transform.position.x, block1.transform.position.y - 1, block1.transform.position.z);
+                block12.name = a.ToString() + "," + b.ToString() + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
+                block12.transform.Rotate(-90f, 0f, 0f);
+                block12.transform.localScale = new Vector3(block12.transform.localScale.x - 0.9f, block12.transform.localScale.y, block12.transform.localScale.z - 0.893125f);
+                block12.tag = "water";
+                block12.GetComponent<MeshRenderer>().material = water;
+                Destroy(block1);
+              
+        }
+        for (int i = 0; i < 25; i++)
+        {
+            a = Random.Range(0, 15);
+            b = Random.Range(9, 13);
+            GameObject block2 = GameObject.Find(a.ToString() + "," + b.ToString() + "," + string.Empty + "," + string.Empty + "#" + string.Empty);
+            GameObject block22 = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            block22.transform.position = new Vector3(block2.transform.position.x, block2.transform.position.y - 1, block2.transform.position.z);
+            block22.name = a.ToString() + "," + b.ToString() + "," + string.Empty + "," + string.Empty + "#" + string.Empty;
+            block22.transform.Rotate(-90f, 0f, 0f);
+            block22.transform.localScale = new Vector3(block22.transform.localScale.x - 0.9f, block22.transform.localScale.y, block22.transform.localScale.z - 0.893125f);
+            block22.tag = "pave";
+            block22.GetComponent<MeshRenderer>().material = pave;
+            Destroy(block2);
             
         }
-    }    
+    }
+/*
+ * Let's calculate the size of an algorithm en bytes.
+ */
+    public long SizeCalculator(List<GameObject> objects)
+    {
+        long sizeOfAlgorithm = 0 ; 
+        foreach(GameObject gameObject in objects)
+        {
+            sizeOfAlgorithm += Profiler.GetRuntimeMemorySizeLong(gameObject);
+        }
+        return sizeOfAlgorithm;
+    }
+/*
+ * Check if every component in list have a Mesh renderer, else, add it
+ */
+    private void MeshRendererCheck(List<GameObject> gameObjects)
+    {
+        foreach(GameObject gameObject in gameObjects)
+        {
+            if(gameObject.TryGetComponent(out MeshRenderer mesh) ==  false)
+            {
+                gameObject.AddComponent<MeshRenderer>();
+            }
+        }
+    }
 }
